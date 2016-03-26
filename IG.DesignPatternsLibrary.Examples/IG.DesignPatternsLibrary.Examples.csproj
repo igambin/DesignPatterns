@@ -50,7 +50,15 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AbstractFactoryTests.cs" />
+    <Compile Include="AbstractFactory\AbstractFactoryExamples.cs" />
+    <Compile Include="AbstractFactory\Apple.cs" />
+    <Compile Include="AbstractFactory\AppleEater.cs" />
+    <Compile Include="AbstractFactory\AppleTree.cs" />
+    <Compile Include="AbstractFactory\Author.cs" />
+    <Compile Include="AbstractFactory\Book.cs" />
+    <Compile Include="AbstractFactory\GrowerEaterFactory.cs" />
+    <Compile Include="AbstractFactory\Reader.cs" />
+    <Compile Include="AbstractFactory\AuthorReaderFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

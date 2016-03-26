@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace IG.DesignPatternsLibrary.Patterns.AbstractFactory
 {
@@ -12,7 +6,7 @@ namespace IG.DesignPatternsLibrary.Patterns.AbstractFactory
     {
         private static readonly Dictionary<string, int> Counters = new Dictionary<string, int>();
 
-        private string ObjectName => this.GetType().Name;
+        private string ObjectName => GetType().Name;
 
         public int Counter { get; }
 

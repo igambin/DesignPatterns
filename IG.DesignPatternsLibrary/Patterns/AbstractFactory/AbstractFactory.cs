@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace IG.DesignPatternsLibrary.Patterns.AbstractFactory
+﻿namespace IG.DesignPatternsLibrary.Patterns.AbstractFactory
 {
     public abstract class AbstractFactory<TProducer, TConsumer, TProduct>
         where TProducer : IProducer<TProduct>, new() 
