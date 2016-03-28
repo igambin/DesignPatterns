@@ -65,6 +65,7 @@
     <Compile Include="Builder\Car.cs" />
     <Compile Include="Builder\RoadsterBuilder.cs" />
     <Compile Include="Builder\SuVBuilder.cs" />
+    <Compile Include="FactoryMethod\FactoryMethodExamples.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

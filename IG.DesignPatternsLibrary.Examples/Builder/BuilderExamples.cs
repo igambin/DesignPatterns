@@ -12,7 +12,7 @@ namespace IG.DesignPatternsLibrary.Examples.Builder
     public class BuilderExamples
     {
         [TestMethod]
-        public void CreateSuvUsingABuilderExample()
+        public void CreateSuvUsingABuilder()
         {
             var builder = new SuVBuilder();
             builder.BuildProduct();
@@ -26,7 +26,7 @@ namespace IG.DesignPatternsLibrary.Examples.Builder
         }
 
         [TestMethod]
-        public void CreateRoadsterUsingABuilderExample()
+        public void CreateRoadsterUsingABuilder()
         {
             var builder = new RoadsterBuilder();
             builder.BuildProduct();

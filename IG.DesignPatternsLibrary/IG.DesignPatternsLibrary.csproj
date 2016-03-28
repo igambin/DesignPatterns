@@ -51,6 +51,7 @@
     <Compile Include="Patterns\Builder\AbstractProduct.cs" />
     <Compile Include="Patterns\Builder\IBuilder.cs" />
     <Compile Include="Patterns\Builder\IProduct.cs" />
+    <Compile Include="Patterns\FactoryMethod\AbstractCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
