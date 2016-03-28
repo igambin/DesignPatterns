@@ -9,11 +9,13 @@
             Product = new TProduct();
         }
 
+        public TProduct GetProduct() => Product;
+
+
         public abstract void AddComponents();
 
         public abstract void ConfigureProduct();
 
-        public TProduct GetProduct() => Product;
 
     }
 }
