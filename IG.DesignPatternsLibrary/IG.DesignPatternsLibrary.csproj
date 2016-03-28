@@ -48,6 +48,7 @@
     <Compile Include="Patterns\AbstractFactory\IProducer.cs" />
     <Compile Include="Patterns\AbstractFactory\IProduct.cs" />
     <Compile Include="Patterns\Builder\AbstractBuilder.cs" />
+    <Compile Include="Patterns\Builder\AbstractProduct.cs" />
     <Compile Include="Patterns\Builder\IBuilder.cs" />
     <Compile Include="Patterns\Builder\IProduct.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
