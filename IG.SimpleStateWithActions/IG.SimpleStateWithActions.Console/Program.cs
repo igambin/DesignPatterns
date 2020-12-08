@@ -21,10 +21,10 @@ namespace IG.SimpleStateWithActions.Console
             DoTransition(r, state => state.Start);
             DoTransition(r, state => state.Finalize);
             DoTransition(r, state => state.Reset);
-		}
+	}
 
-		public static void DoTransition(Run.Run r, Expression<Func<IRunState, IRunState>> transition)
-		{
+	public static void DoTransition(Run.Run r, Expression<Func<IRunState, IRunState>> transition)
+	{
             var sc = new RunStateController();
             try
             {
