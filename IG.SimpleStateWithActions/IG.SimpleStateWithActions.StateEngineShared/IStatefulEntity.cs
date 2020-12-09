@@ -1,6 +1,6 @@
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public interface IStatefulEntity<TState>
+    public interface IStatedEntity<TState>
     {
         TState State { get; set; }
     }

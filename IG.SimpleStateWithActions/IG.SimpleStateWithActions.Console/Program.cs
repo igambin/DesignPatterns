@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-using IG.SimpleStateWithActions.Run.RunState;
+using IG.SimpleStateWithActions.Models;
+using IG.SimpleStateWithActions.StateEngines;
 using IG.SimpleStateWithActions.StateEngineShared;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
 
@@ -10,7 +11,7 @@ namespace IG.SimpleStateWithActions.Console
     {
         public static void Main(string[] args)
         {
-            var r = new Run.Run
+            var r = new Run
             {
                 Name = "TestRun",
                 State = new RunStates.Initial()
@@ -23,9 +24,9 @@ namespace IG.SimpleStateWithActions.Console
             DoTransition(r, state => state.Reset);
 	}
 
-	public static void DoTransition(Run.Run r, Expression<Func<IRunState, IRunState>> transition)
+	public static void DoTransition(Run r, Expression<Func<IRunState, IRunState>> transition)
 	{
-            var sc = new RunStateController();
+            var sc = new RunStateEngine();
             try
             {
                 sc.InvokeTransition(r, transition);

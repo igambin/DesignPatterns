@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IG.SimpleStateWithActions.Models", "IG.SimpleStateWithActions\IG.SimpleStateWithActions.Models.csproj", "{26CB87BB-9E7D-4431-AD77-B65B7800159D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IG.SimpleStateWithActions", "IG.SimpleStateWithActions\IG.SimpleStateWithActions.csproj", "{26CB87BB-9E7D-4431-AD77-B65B7800159D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IG.SimpleStateWithActions.Console", "IG.SimpleStateWithActions.Console\IG.SimpleStateWithActions.Console.csproj", "{9877B77A-DCBB-48C8-8864-F315F7F8EE59}"
 EndProject

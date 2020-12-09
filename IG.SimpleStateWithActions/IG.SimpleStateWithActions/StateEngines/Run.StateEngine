@@ -1,7 +1,7 @@
 ﻿Entity:Run
 States:Initial,InProgress,Done,Cancelled,Failed
-T:Initial>Start>InProgress+StartRun-StartFailed
-T:InProgress>Finalize>Done-FinalizeFailed
+T:Initial>Start>InProgress+StartRun
+T:InProgress>Finalize>Done+FinalizeRun
 T:InProgress>Cancel>Cancelled
 T:InProgress>Fail>Failed
 T:Done>Reset>Initial

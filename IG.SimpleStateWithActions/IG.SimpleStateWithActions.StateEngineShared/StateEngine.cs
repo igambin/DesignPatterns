@@ -4,16 +4,16 @@ using System.Linq.Expressions;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public class StateController<TEntity, TState> where TEntity : IStatefulEntity<TState>, new()
+    public abstract class StateEngine<TEntity, TState> where TEntity : IStatedEntity<TState>, new()
     {
-        protected List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState> onFailedAction)> Transitions =
-            new List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState> onFailedAction)>();
+        protected abstract List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState>
+            onFailedAction)> Transitions { get; }
 
         public virtual void InvokeTransition(TEntity entity, Expression<Func<TState, TState>> transition)
         {
             List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState> onFailedAction)> haystack
                 = new List<(Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Func<TState, TState> onFailedAction)>();
-            (Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Func<TState, TState> onFailedAction)? RequestedTransition = null;
+            (Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Func<TState, TState> onFailedAction) RequestedTransition = default;
             MemberExpression needleMember = null;
             try // to find requested transition 
             {
@@ -46,11 +46,11 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             Action<TEntity> action = null;
             Func<TState, TState> onSuccess = null;
             Func<TState, TState> onFailure = null;
-            if (RequestedTransition != null)
+            if (RequestedTransition != default)
             {
-                onSuccess = RequestedTransition.Value.transition?.Compile();
-                action = RequestedTransition.Value.action;
-                onFailure = RequestedTransition.Value.onFailedAction;
+                onSuccess = RequestedTransition.transition?.Compile();
+                action = RequestedTransition.action;
+                onFailure = RequestedTransition.onFailedAction;
             }
             else
             {
