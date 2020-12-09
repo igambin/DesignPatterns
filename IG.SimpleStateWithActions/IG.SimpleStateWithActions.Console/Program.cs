@@ -22,6 +22,9 @@ namespace IG.SimpleStateWithActions.Console
             DoTransition(r, state => state.Start);
             DoTransition(r, state => state.Finalize);
             DoTransition(r, state => state.Reset);
+
+            System.Console.WriteLine();
+            System.Console.WriteLine(r.Name);
 	}
 
 	public static void DoTransition(Run r, Expression<Func<IRunState, IRunState>> transition)

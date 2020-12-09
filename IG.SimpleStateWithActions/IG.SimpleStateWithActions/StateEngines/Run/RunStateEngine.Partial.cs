@@ -26,9 +26,8 @@ namespace IG.SimpleStateWithActions.StateEngines
     /// </summary>
     public partial class RunStateEngine
     {
-        // NOTE: if a constructor receiving specific dependencies is required, create a partial
-        //       class defining the according constructor with all dependencies that are required
-        //       to handle the transitions, e. g. repositories, logger, etc.
+        // NOTE: use the following constructor in this partial specific dependencies are required
+        //       in order to handle transitions, e. g. repositories, logger, etc.
         public RunStateEngine(/* add dependencies here */)
         {
         }
@@ -37,11 +36,11 @@ namespace IG.SimpleStateWithActions.StateEngines
         //       in accordance to the corresponding transitions
         partial void StartRun(Run run)
         {
-            Console.WriteLine("   Starting Run!");
+            /* add logic here */
         }
         partial void FinalizeRun(Run run)
         {
-            Console.WriteLine("   Finalizing Run!");
+            /* add logic here */
         }
     }
 }

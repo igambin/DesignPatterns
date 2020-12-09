@@ -256,9 +256,8 @@ using <#= entityNamespace.Substring(9).Trim() #>;
     /// </summary>
     public partial class <#= entity #>StateEngine
     {
-        // NOTE: if a constructor receiving specific dependencies is required, create a partial
-        //       class defining the according constructor with all dependencies that are required
-        //       to handle the transitions, e. g. repositories, logger, etc.
+        // NOTE: use the following constructor in this partial specific dependencies are required
+        //       in order to handle transitions, e. g. repositories, logger, etc.
         public <#= entity #>StateEngine(/* add dependencies here */)
         {
         }
