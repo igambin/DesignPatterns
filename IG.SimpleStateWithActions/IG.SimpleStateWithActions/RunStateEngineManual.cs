@@ -1,8 +1,27 @@
 using System;
+using IG.SimpleStateWithActions;
 using IG.SimpleStateWithActions.StateEngineShared;
 
-namespace IG.SimpleStateWithActions.Run.RunState
+namespace IG.SimpleStateWithActions
 {
+    public interface IRunState : IState<IRunState>
+    {
+        IRunState Finalize { get; }
+        IRunState Reset { get; }
+        IRunState Start { get; }
+        IRunState Cancel { get; }
+    }
+
+    public abstract class RunState : State<IRunState>, IRunState
+    {
+        public virtual IRunState Finalize => Undefined("Finalize");
+        public virtual IRunState Reset => Undefined("Reset");
+        public virtual IRunState Start => Undefined("Start");
+        public virtual IRunState Cancel => Undefined("Cancel");
+        public override IRunState Fail => new RunStates.Failed();
+
+    }
+
     /// <summary>
     /// 	RunStateController provides Actions that are to be executed on 
     /// 	state transitions. This allows modifications and interactions in
@@ -19,8 +38,6 @@ namespace IG.SimpleStateWithActions.Run.RunState
             Transitions.Add((typeof(RunStates.Done), runState => runState.Reset, run => InvokeReset(run), null));
             Transitions.Add((typeof(RunStates.Cancelled), runState => runState.Reset, null, null));
             Transitions.Add((typeof(RunStates.Failed), runState => runState.Reset, null, null));
-            Transitions.Add((typeof(RunStates.Initial), runState => runState.Start, run => InvokeStart(run), runState => runState.Fail));
-            Transitions.Add((typeof(RunStates.Initial), runState => runState.Start, run => InvokeStart(run), runState => runState.Fail));
         }
 
         private void InvokeStart(Run run) { Console.WriteLine("   Starting run!");/* implement logic to handle the transition event */}
@@ -31,4 +48,30 @@ namespace IG.SimpleStateWithActions.Run.RunState
         private void InvokeReset(Run run) { Console.WriteLine("    Resetting run!"); }
 
     }
+
+    public class RunStates
+    {
+        public class Initial : RunState, IState<IRunState>
+        {
+            public override IRunState Start => new InProgress();
+        }
+        public class InProgress : RunState, IState<IRunState>
+        {
+            public override IRunState Finalize => new Done();
+            public override IRunState Cancel => new Cancelled();
+        }
+        public class Done : RunState, IState<IRunState>
+        {
+            public override IRunState Reset => new Initial();
+        }
+        public class Cancelled : RunState, IState<IRunState>
+        {
+            public override IRunState Reset => new Initial();
+        }
+        public class Failed : RunState, IState<IRunState>
+        {
+            public override IRunState Reset => new Initial();
+        }
+    }
+
 }

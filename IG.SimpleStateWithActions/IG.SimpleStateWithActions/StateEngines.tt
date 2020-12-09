@@ -1,0 +1,81 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="EnvDTE" #>
+
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+
+<#@ output extension=".txt" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+
+
+<#
+
+    // Get value of 'Custom Tool Namespace'
+    var serviceProvider = (IServiceProvider)this.Host;
+    var dte = (DTE)serviceProvider.GetService(typeof(DTE));    
+    var seNamespace = (string) dte.Solution.FindProjectItem(this.Host.TemplateFile).Properties.Item("CustomToolNamespace").Value;
+#>
+
+namespace <#= seNamespace #> 
+{
+
+
+<#
+    string path = Host.ResolvePath("");
+    List<string> files = Directory.GetFiles(path, "*.se").ToList();
+    foreach (string file in files)
+    {
+        //// Read SE file
+        var entity = "";
+        List<string> states = null;
+        List<(string from, string transition, string entityAction, string fallbackAction)> transitions 
+            = new List<(string @from, string transition, string entityAction, string fallbackAction)>();
+        var lines = File.ReadAllLines(file);
+        lines = lines.Select(l => l.Replace(" ","" )).ToArray();
+        {
+            // read entity name
+            var entityLine = lines.FirstOrDefault(l => l.StartsWith("Entity:"));
+            if (!string.IsNullOrWhiteSpace(entityLine))
+            {
+                entity = entityLine.Split(':').Last().Trim();
+            }
+        }
+        {
+            // read states
+            var statesLine = lines.FirstOrDefault(l => l.StartsWith("States:"));
+            if (!string.IsNullOrWhiteSpace(statesLine))
+            {
+                states = statesLine.Split(':').Skip(1).Select(x => x.Trim()).Union(new []{"Failed"}).Distinct().ToList();
+            }
+        }
+        {
+            // read transitions
+            var transitionLines = lines.Where(l => l.StartsWith("T:"));
+            Regex r = new Regex(@"(?<fromState>\w+)>(?<transition>\w+)(\+(?<action>\w+))?(\-(?<fallback>\w+))?");
+            foreach (var transitionLine in transitionLines)
+            {
+                Match m = r.Match(transitionLine);
+                if (m.Success)
+                {
+                    transitions.Add(
+                        (
+                            m.Groups["fromState"].Value, m.Groups["transition"].Value, 
+                            m.Groups["action"].Value, m.Groups["fallback"].Value
+                        )
+                    );
+                }
+            }
+        }
+
+        /// verify input
+        if (string.IsNullOrWhiteSpace(entity)) continue;
+        if (states.string.IsNullOrWhiteSpace(entity)) continue;
+    }
+#>
+
+}

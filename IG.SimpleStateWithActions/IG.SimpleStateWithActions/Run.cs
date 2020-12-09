@@ -1,7 +1,7 @@
-using IG.SimpleStateWithActions.Run.RunState;
+using IG.SimpleStateWithActions;
 using IG.SimpleStateWithActions.StateEngineShared;
 
-namespace IG.SimpleStateWithActions.Run
+namespace IG.SimpleStateWithActions
 {
     public class Run : IStatefulEntity<IRunState>
     {

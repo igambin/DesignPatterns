@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IG.SimpleStateWithActions\IG.SimpleStateWithActions.Run.csproj" />
+    <ProjectReference Include="..\IG.SimpleStateWithActions\IG.SimpleStateWithActions.Models.csproj" />
   </ItemGroup>
 
 </Project>
