@@ -41,7 +41,7 @@
         if (!string.IsNullOrWhiteSpace(statesLine))
         {
             states =
-                statesLine.Split(':')[1].Split(',').Select(x => x.Trim()).Union(new[] {"Failed"}).Distinct()
+                statesLine.Split(':')[1].Split(',').Select(x => x.Trim()).Distinct()
                     .ToList();
         }
 
@@ -123,9 +123,8 @@ using <#= entityNamespace.Substring(9).Trim() #>;
 {
 <#
         /// prepare values
-        var transitionNames = Transitions
-            .Where(x => x.transition != "Fail")
-            .Select(t => t.transition).Distinct().ToList();
+        var transitionNames = 
+            Transitions.Select(t => t.transition).Distinct().ToList();
 
 #>
     public interface I<#= entity #>State : IState<I<#= entity #>State>
@@ -146,11 +145,10 @@ using <#= entityNamespace.Substring(9).Trim() #>;
         foreach (var t in transitionNames)
         {
 #>
-        public virtual I<#= entity #>State <#= t #> => Undefined("<#= t #>");
+        public virtual I<#= entity #>State <#= t #> => UndefinedTransition("<#= t #>");
 <#
         }
 #>
-        public override I<#= entity #>State Fail => new <#= entity #>States.Failed();
     }
 
     public class <#= entity #>States
@@ -188,10 +186,10 @@ using <#= entityNamespace.Substring(9).Trim() #>;
                 Type, 
                 Expression<Func<I<#= entity #>State, I<#= entity #>State>> transition, 
                 Action<<#= entity #>> action,
-                Func<I<#= entity #>State, I<#= entity #>State> onFailedAction
+                Expression<Func<I<#= entity #>State, I<#= entity #>State>> transitionOnFail
             )> Transitions
             => new List<(Type, Expression<Func<I<#= entity #>State, I<#= entity #>State>> transition, Action<<#= entity #>> action,
-                Func<I<#= entity #>State, I<#= entity #>State> onFailedAction)>
+                Expression<Func<I<#= entity #>State, I<#= entity #>State>> transitionOnFail)>
             {
 <#
         foreach (var t in Transitions)

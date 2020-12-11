@@ -2,8 +2,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public interface IState<TState>
     {
-        TState Fail { get; }
-        TState Undefined(string transition);
-
+        TState UndefinedTransition(string transition);
+        TState FaíledTransition(string transition);
     }
 }

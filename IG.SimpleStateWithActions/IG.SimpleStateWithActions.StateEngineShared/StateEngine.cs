@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public abstract class StateEngine<TEntity, TState> where TEntity : IStatedEntity<TState>, new()
     {
-        protected abstract List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState>
-            onFailedAction)> Transitions { get; }
+        protected abstract List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Expression<Func<TState, TState>> transitionOnFail)> Transitions { get; }
 
         public virtual void InvokeTransition(TEntity entity, Expression<Func<TState, TState>> transition)
         {
-            List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Func<TState, TState> onFailedAction)> haystack
-                = new List<(Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Func<TState, TState> onFailedAction)>();
-            (Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Func<TState, TState> onFailedAction) RequestedTransition = default;
+            List<(Type, Expression<Func<TState, TState>> transition, Action<TEntity> action, Expression<Func<TState, TState>> transitionOnFail)> haystack
+                = new List<(Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Expression<Func<TState, TState>> onFailedTransition)>();
+            (Type, Expression<Func<TState, TState>> transition, System.Action<TEntity> action, Expression<Func<TState, TState>> transitionOnFail) requestedTransition = default;
             MemberExpression needleMember = null;
             try // to find requested transition 
             {
@@ -21,12 +21,9 @@ namespace IG.SimpleStateWithActions.StateEngineShared
                 needleMember = transition.Body as MemberExpression;
                 if (needleMember == null)
                 {
-                    Console.WriteLine("arrange failed (needle)");
-                    // throw exception? or
-                    return; // do nothing?
+                    throw new TransitionFailedException($"Transition '{transition?.Body.ToString()??"[null]"}' failed on {typeof(TEntity)}");
                 }
 
-                // TODO ==> invoking all transition will crash because it will also invoke on UndefinedTransitions 
                 Transitions.ForEach(t =>
                 {
                     var transitionMember = t.transition.Body as MemberExpression;
@@ -34,40 +31,46 @@ namespace IG.SimpleStateWithActions.StateEngineShared
                         && needleMember.Member.Name == transitionMember.Member.Name
                         && needleMember.Member.ReflectedType == transitionMember.Member.ReflectedType)
                     {
-                        RequestedTransition = t;
+                        requestedTransition = t;
                     }
                 });
             }
             catch (Exception ex)
             {
-                // handle error on setting up transition
+                throw new TransitionFailedException(ex);
             }
 
             Action<TEntity> action = null;
-            Func<TState, TState> onSuccess = null;
-            Func<TState, TState> onFailure = null;
-            if (RequestedTransition != default)
+            Expression<Func<TState, TState>> onSuccess = null;
+            Expression<Func<TState, TState>> onFailure = null;
+            if (requestedTransition != default)
             {
-                onSuccess = RequestedTransition.transition?.Compile();
-                action = RequestedTransition.action;
-                onFailure = RequestedTransition.onFailedAction;
+                onSuccess = requestedTransition.transition;
+                action = requestedTransition.action;
+                onFailure = requestedTransition.transitionOnFail;
             }
             else
             {
-                var forceUndefinedTransitionException = transition.Compile()(entity.State);
+                throw new UndefinedTransitionException(needleMember.Member.Name, entity.State.GetType().Name);
             }
 
             try // to execute found action and set target-state accordingly
             {
-                Console.WriteLine("    => handle event: " + needleMember.Member.Name);
-                if (action != null) action(entity);
-                entity.State = onSuccess(entity.State);
+                action?.Invoke(entity);
+                entity.State = onSuccess.Compile()(entity.State);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("    " + ex.Message);
-                Console.WriteLine("    => handle event: FAIL");
-                if (onFailure != null) entity.State = onFailure(entity.State);
+                if (onFailure != null)
+                {
+                    Console.WriteLine(ex.Messages(7));
+                    Console.WriteLine($"       Invoking fallback transition '{onFailure}'");
+                    InvokeTransition(entity, onFailure);
+                }
+                else
+                {
+                    throw new TransitionFailedException(ex);
+                }
             }
 
         }

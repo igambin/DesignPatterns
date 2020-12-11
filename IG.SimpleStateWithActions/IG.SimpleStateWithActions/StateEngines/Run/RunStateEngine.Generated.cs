@@ -23,16 +23,17 @@ namespace IG.SimpleStateWithActions.StateEngines
         IRunState Start { get; }
         IRunState Finalize { get; }
         IRunState Cancel { get; }
+        IRunState Fail { get; }
         IRunState Reset { get; }
     }
 
     public abstract class RunState : State<IRunState>, IRunState
     {
-        public virtual IRunState Start => Undefined("Start");
-        public virtual IRunState Finalize => Undefined("Finalize");
-        public virtual IRunState Cancel => Undefined("Cancel");
-        public virtual IRunState Reset => Undefined("Reset");
-        public override IRunState Fail => new RunStates.Failed();
+        public virtual IRunState Start => UndefinedTransition("Start");
+        public virtual IRunState Finalize => UndefinedTransition("Finalize");
+        public virtual IRunState Cancel => UndefinedTransition("Cancel");
+        public virtual IRunState Fail => UndefinedTransition("Fail");
+        public virtual IRunState Reset => UndefinedTransition("Reset");
     }
 
     public class RunStates
@@ -74,13 +75,13 @@ namespace IG.SimpleStateWithActions.StateEngines
                 Type, 
                 Expression<Func<IRunState, IRunState>> transition, 
                 Action<Run> action,
-                Func<IRunState, IRunState> onFailedAction
+                Expression<Func<IRunState, IRunState>> transitionOnFail
             )> Transitions
             => new List<(Type, Expression<Func<IRunState, IRunState>> transition, Action<Run> action,
-                Func<IRunState, IRunState> onFailedAction)>
+                Expression<Func<IRunState, IRunState>> transitionOnFail)>
             {
                 (typeof(RunStates.Initial), state => state.Start, StartRun, null),
-                (typeof(RunStates.InProgress), state => state.Finalize, FinalizeRun, null),
+                (typeof(RunStates.InProgress), state => state.Finalize, FinalizeRun, state => state.Cancel),
                 (typeof(RunStates.InProgress), state => state.Cancel, null, null),
                 (typeof(RunStates.InProgress), state => state.Fail, null, null),
                 (typeof(RunStates.Done), state => state.Reset, null, null),

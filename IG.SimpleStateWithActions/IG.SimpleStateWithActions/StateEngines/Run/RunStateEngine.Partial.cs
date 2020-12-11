@@ -40,7 +40,7 @@ namespace IG.SimpleStateWithActions.StateEngines
         }
         partial void FinalizeRun(Run run)
         {
-            /* add logic here */
+            throw new Exception("Finalization crashed!");
         }
     }
 }

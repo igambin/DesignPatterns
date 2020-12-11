@@ -8,5 +8,8 @@ namespace IG.SimpleStateWithActions.StateEngineShared.Exceptions
 
         public UndefinedTransitionException(string transition, string sourceState)
             : base(string.Format(MessageTemplate, transition, sourceState)) { }
+
+        public UndefinedTransitionException(string transition, string sourceState, Exception ex)
+            : base(string.Format(MessageTemplate, transition, sourceState), ex) { }
     }
 }

@@ -34,9 +34,9 @@ namespace IG.SimpleStateWithActions.Console
             {
                 sc.InvokeTransition(r, transition);
             }
-            catch (UndefinedTransitionException ste)
+            catch (Exception ste)
             {
-                System.Console.WriteLine("    " + ste.Message);
+                System.Console.WriteLine("    " + ste.Messages());
             }
             System.Console.WriteLine($"\nState: {r.State}");
         }
