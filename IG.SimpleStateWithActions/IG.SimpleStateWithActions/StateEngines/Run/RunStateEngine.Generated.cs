@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
 using IG.SimpleStateWithActions.Models;
+using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngines
 {
@@ -29,11 +30,18 @@ namespace IG.SimpleStateWithActions.StateEngines
 
     public abstract class RunState : State<IRunState>, IRunState
     {
-        public virtual IRunState Start => UndefinedTransition("Start");
-        public virtual IRunState Finalize => UndefinedTransition("Finalize");
-        public virtual IRunState Cancel => UndefinedTransition("Cancel");
-        public virtual IRunState Fail => UndefinedTransition("Fail");
-        public virtual IRunState Reset => UndefinedTransition("Reset");
+        public virtual IRunState Start => UndefinedTransition(nameof(Start));
+        public virtual IRunState Finalize => UndefinedTransition(nameof(Finalize));
+        public virtual IRunState Cancel => UndefinedTransition(nameof(Cancel));
+        public virtual IRunState Fail => UndefinedTransition(nameof(Fail));
+        public virtual IRunState Reset => UndefinedTransition(nameof(Reset));
+        public override IRunState T_Error(IRunState previousState, Expression<Func<IRunState, IRunState>> attemptedTransition, Exception exception)
+            => new RunStates.T_Error() 
+                {
+                    PreviousState = previousState,
+                    AttemptedTransition = attemptedTransition,
+                    Exception = exception
+                };
     }
 
     public class RunStates
@@ -42,24 +50,47 @@ namespace IG.SimpleStateWithActions.StateEngines
         {
             public override IRunState Start => new RunStates.InProgress();       
         }
+
         public class InProgress : RunState, IState<IRunState>
         {
             public override IRunState Finalize => new RunStates.Done();       
             public override IRunState Cancel => new RunStates.Cancelled();       
             public override IRunState Fail => new RunStates.Failed();       
         }
+
         public class Done : RunState, IState<IRunState>
         {
             public override IRunState Reset => new RunStates.Initial();       
         }
+
         public class Cancelled : RunState, IState<IRunState>
         {
             public override IRunState Reset => new RunStates.Initial();       
         }
+
         public class Failed : RunState, IState<IRunState>
         {
             public override IRunState Reset => new RunStates.Initial();       
         }
+
+        public class T_Error : RunState, ITechnicalErrorState<IRunState>, IState<IRunState>
+        {
+
+            public override IRunState Reset => new RunStates.Initial();       
+
+            public T_Error() {}
+
+            public void InitError(IRunState previousState, Expression<Func<IRunState, IRunState>> attemptedTransition, Exception exception) 
+            {
+                PreviousState = previousState;
+                AttemptedTransition = attemptedTransition;
+                Exception = exception;
+            }
+            public IRunState PreviousState { get; set; }
+            public Expression<Func<IRunState, IRunState>> AttemptedTransition { get; set; }
+            public Exception Exception { get; set; }
+        }
+
     }
 
     /// <summary>
@@ -70,23 +101,17 @@ namespace IG.SimpleStateWithActions.StateEngines
     public partial class RunStateEngine : StateEngine<Run, IRunState>
     {
 
-        protected override List<
-            (
-                Type, 
-                Expression<Func<IRunState, IRunState>> transition, 
-                Action<Run> action,
-                Expression<Func<IRunState, IRunState>> transitionOnFail
-            )> Transitions
-            => new List<(Type, Expression<Func<IRunState, IRunState>> transition, Action<Run> action,
-                Expression<Func<IRunState, IRunState>> transitionOnFail)>
+        public override List<Transition<Run, IRunState>> Transitions 
+            => new List<Transition<Run, IRunState>>
             {
-                (typeof(RunStates.Initial), state => state.Start, StartRun, null),
-                (typeof(RunStates.InProgress), state => state.Finalize, FinalizeRun, state => state.Cancel),
-                (typeof(RunStates.InProgress), state => state.Cancel, null, null),
-                (typeof(RunStates.InProgress), state => state.Fail, null, null),
-                (typeof(RunStates.Done), state => state.Reset, null, null),
-                (typeof(RunStates.Cancelled), state => state.Reset, null, null),
-                (typeof(RunStates.Failed), state => state.Reset, null, null),
+                new Transition<Run, IRunState>(new RunStates.Initial(), state => state.Start, StartRun, null,null),
+                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Finalize, FinalizeRun, state => state.Fail,null),
+                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Cancel, null, null,null),
+                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Fail, null, null,null),
+                new Transition<Run, IRunState>(new RunStates.Done(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState>(new RunStates.Cancelled(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState>(new RunStates.Failed(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState>(new RunStates.T_Error(), state => state.Reset, StartCleanup, null,null),
             };
 
         // NOTE: if a constructor receiving specific dependencies is required, 
@@ -97,8 +122,9 @@ namespace IG.SimpleStateWithActions.StateEngines
         //       implement the following methods as partial methods in that partial 
         //       class as well in order to satisfy the MethodGroup-Calls in the
         //       transition list above
-        partial void StartRun(Run run);
-        partial void FinalizeRun(Run run);
+        private partial bool StartRun(Run run);
+        private partial bool FinalizeRun(Run run);
+        private partial bool StartCleanup(Run run);
     }
 } 
 

@@ -34,13 +34,20 @@ namespace IG.SimpleStateWithActions.StateEngines
 
         // NOTE: implement the following partial methods in order to process the entities
         //       in accordance to the corresponding transitions
-        partial void StartRun(Run run)
+        private partial bool StartRun(Run run)
         {
             /* add logic here */
+            return true;
         }
-        partial void FinalizeRun(Run run)
+        private partial bool StartCleanup(Run run)
         {
-            throw new Exception("Finalization crashed!");
+            /* add logic here */
+            return false;
+        }
+        private partial bool FinalizeRun(Run run)
+        {
+            /* add logic here */
+            return true;
         }
     }
 }

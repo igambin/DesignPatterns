@@ -1,6 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\IG.SimpleState",
+    "\\IG.SimpleStateWithActions"
   ],
+  "SelectedNode": "\\IG.SimpleStateWithActions\\IG.SimpleStateWithActions.sln",
   "PreviewInSolutionExplorer": false
 }

@@ -1,9 +1,10 @@
 ﻿Entity:Run
-States:Initial,InProgress,Done,Cancelled,Failed
-T:Initial>Start>InProgress+StartRun
-T:InProgress>Finalize>Done+FinalizeRun-Cancel
-T:InProgress>Cancel>Cancelled
-T:InProgress>Fail>Failed
-T:Done>Reset>Initial
-T:Cancelled>Reset>Initial
-T:Failed>Reset>Initial
+States:Initial,InProgress,Done,Cancelled,Failed,T_Error
+T:Initial    + Start    | StartRun     > InProgress
+T:InProgress + Finalize | FinalizeRun  > Done       - Fail |              > Failed
+T:InProgress + Cancel   |              > Cancelled
+T:InProgress + Fail     |              > Failed
+T:Done       + Reset    |              > Initial
+T:Cancelled  + Reset    |              > Initial
+T:Failed     + Reset    |              > Initial
+T:T_Error    + Reset    | StartCleanup > Initial

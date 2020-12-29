@@ -19,6 +19,7 @@ namespace IG.SimpleStateWithActions.Console
             System.Console.WriteLine($"State: {r.State}");
 
             DoTransition(r, state => state.Finalize);
+            DoTransition(r, state => state.Reset);
             DoTransition(r, state => state.Start);
             DoTransition(r, state => state.Finalize);
             DoTransition(r, state => state.Reset);
@@ -27,18 +28,34 @@ namespace IG.SimpleStateWithActions.Console
             System.Console.WriteLine(r.Name);
 	}
 
-	public static void DoTransition(Run r, Expression<Func<IRunState, IRunState>> transition)
+	public static void DoTransition(Run run, Expression<Func<IRunState, IRunState>> transition)
 	{
-            var sc = new RunStateEngine();
+            var runStateEngine = new RunStateEngine();
             try
             {
-                sc.InvokeTransition(r, transition);
+                string tname = $"({ transition.TransitionName()} from { run.State.GetType().Name})";
+                var t = runStateEngine.For(run)
+                    .InvokeTransition(transition)
+                    .WithoutPreValidation()
+                    .OnSuccess(() =>
+                    {
+                        System.Console.WriteLine($"Success {tname}!");
+                    })
+                    .OnFailed(() =>
+                    {
+                        System.Console.WriteLine($"Failed {tname}!");
+                    })
+                    .OnError((ex) =>
+                    {
+                        System.Console.WriteLine($"ERROR {tname}: {ex.Message}");
+                    })
+                    .Execute();
             }
             catch (Exception ste)
             {
                 System.Console.WriteLine("    " + ste.Messages());
             }
-            System.Console.WriteLine($"\nState: {r.State}");
+            System.Console.WriteLine($"\nState: {run.State}");
         }
 
     }

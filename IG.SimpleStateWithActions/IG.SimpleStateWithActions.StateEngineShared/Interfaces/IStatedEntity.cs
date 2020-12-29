@@ -1,4 +1,4 @@
-namespace IG.SimpleStateWithActions.StateEngineShared
+namespace IG.SimpleStateWithActions.StateEngineShared.Interfaces
 {
     public interface IStatedEntity<TState>
     {

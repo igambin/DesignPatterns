@@ -5,6 +5,8 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Text.RegularExpressions" #>
 <#
+
+
     var parentFolder = Host.ResolvePath("../");
     List<string> allEngineDescriptors = Directory.GetFiles(parentFolder, "*.StateEngine", SearchOption.AllDirectories).ToList();
     foreach (
@@ -12,14 +14,16 @@
             allEngineDescriptors.Select(
                 f => (
                     inFile: f, 
-                        outDir: new FileInfo(f).DirectoryName))
+                    outDir: new FileInfo(f).DirectoryName))
                 .ToList())
     {
 
         List<string> states = new List<string>();
 
-        List<(string from, string transition, string to, string entityAction, string failTransition)> Transitions
-            = new List<(string from, string transition, string to, string entityAction, string failTransition)>();
+        List<(string from, string transitionOnSuccess, string onTransitioning, string stateOnSuccess,
+                           string transitionOnFailed , string onTransitionFailed, string stateOnFailed)> Transitions
+            = new List<(string from, string transitionOnSuccess, string onTransitioning, string stateOnSuccess,
+                string transitionOnFailed , string onTransitionFailed, string stateOnFailed)>();
 
         string entity = "";
         string entityNamespace = "";
@@ -47,9 +51,7 @@
 
         // read transitions
         var transitionLines = lines.Where(l => l.StartsWith("T:"));
-        Regex r =
-            new Regex(
-                @"(?<fromState>\w+)>(?<transition>\w+)>(?<toState>\w+)(\+(?<action>\w+))?(\-(?<failTransition>\w+))?");
+        Regex r = new Regex(@"\s*(?<fromState>\w+)\s*(\+\s*(?<transitionOnSuccess>\w+))\s*(\|\s*(?<onTransitioning>\w*))?\s*>\s*(?<stateOnSuccess>\w+)\s*((\-\s*(?<transitionOnFailed>\w+))\s*(\|\s*(?<onTransitionFailed>\w*))?\s*>\s*(?<stateOnFailed>\w+))?");
         foreach (var transitionLine in transitionLines)
         {
             Match m = r.Match(transitionLine);
@@ -57,12 +59,14 @@
             {
                 Transitions.Add(
                     (
-                        m.Groups["fromState"].Value, 
-                            m.Groups["transition"].Value, 
-                            m.Groups["toState"].Value,
-                            m.Groups["action"].Value, 
-                            m.Groups["failTransition"].Value
-                        ));
+                        m.Groups["fromState"].Value.Trim(), 
+                        m.Groups["transitionOnSuccess"].Value.Trim(), 
+                        m.Groups["onTransitioning"].Value.Trim(),
+                        m.Groups["stateOnSuccess"].Value.Trim(), 
+                        m.Groups["transitionOnFailed"].Value.Trim(), 
+                        m.Groups["onTransitionFailed"].Value.Trim(),
+                        m.Groups["stateOnFailed"].Value.Trim()
+                    ));
             }
         }
 
@@ -124,7 +128,13 @@ using <#= entityNamespace.Substring(9).Trim() #>;
 <#
         /// prepare values
         var transitionNames = 
-            Transitions.Select(t => t.transition).Distinct().ToList();
+            Transitions
+                .Select(t => t.transitionOnSuccess)
+                .Union(Transitions.Select(t => t.transitionOnFailed))
+                .Where(t => !t.Equals("T_Error", StringComparison.InvariantCultureIgnoreCase)
+                                && !string.IsNullOrWhiteSpace(t))
+                .Distinct()
+                .ToList();
 
 #>
     public interface I<#= entity #>State : IState<I<#= entity #>State>
@@ -145,32 +155,91 @@ using <#= entityNamespace.Substring(9).Trim() #>;
         foreach (var t in transitionNames)
         {
 #>
-        public virtual I<#= entity #>State <#= t #> => UndefinedTransition("<#= t #>");
+        public virtual I<#= entity #>State <#= t #> => UndefinedTransition(nameof(<#= t #>));
 <#
         }
 #>
+        public override I<#= entity #>State T_Error(I<#= entity #>State previousState, Expression<Func<I<#= entity #>State, I<#= entity #>State>> attemptedTransition, Exception exception)
+            => new <#= entity #>States.T_Error() 
+                {
+                    PreviousState = previousState,
+                    AttemptedTransition = attemptedTransition,
+                    Exception = exception
+                };
     }
 
     public class <#= entity #>States
     {
 <#
-        foreach (var s in states)
+        foreach (var s in states.Where(state => !state.Equals("T_Error")))
         {
 #>
         public class <#= s #> : <#= entity #>State, IState<I<#= entity #>State>
         {
 <#
-    foreach (var t in Transitions.Where(t => t.from == s))
-    {
+            var stateTransitions = Transitions.Where(t => t.from == s).ToList();
+            var generateTransitions =
+                stateTransitions.Where(
+                    t =>
+                        !string.IsNullOrWhiteSpace(t.transitionOnSuccess) &&
+                        !string.IsNullOrWhiteSpace(t.stateOnSuccess)).Select(
+                            t => (transition: t.transitionOnSuccess, state: t.stateOnSuccess))
+                    .Union(
+                        stateTransitions.Where(
+                            t =>
+                                !string.IsNullOrWhiteSpace(t.transitionOnFailed) &&
+                                !string.IsNullOrWhiteSpace(t.stateOnFailed)).Select(
+                                    t => (transition: t.transitionOnFailed, state: t.stateOnFailed)));
+        foreach (var t in generateTransitions)
+        {
 #>
-            public override I<#= entity #>State <#= t.transition #> => new <#= entity #>States.<#= t.to #>();       
+            public override I<#= entity #>State <#= t.transition #> => new <#= entity #>States.<#= t.state #>();       
 <#
-    }
+        }
 #>
         }
+
 <#
         }
 #>
+        public class T_Error : <#= entity #>State, ITechnicalErrorState<I<#= entity #>State>, IState<I<#= entity #>State>
+        {
+
+<#
+            var errStateTransitions = Transitions.Where(t => t.from == "T_Error").ToList();
+            var errGenerateTransitions =
+                errStateTransitions.Where(
+                    t =>
+                        !string.IsNullOrWhiteSpace(t.transitionOnSuccess) &&
+                        !string.IsNullOrWhiteSpace(t.stateOnSuccess)).Select(
+                            t => (transition: t.transitionOnSuccess, state: t.stateOnSuccess))
+                    .Union(
+                        errStateTransitions.Where(
+                            t =>
+                                !string.IsNullOrWhiteSpace(t.transitionOnFailed) &&
+                                !string.IsNullOrWhiteSpace(t.stateOnFailed)).Select(
+                                    t => (transition: t.transitionOnFailed, state: t.stateOnFailed)));
+        foreach (var t in errGenerateTransitions)
+        {
+#>
+            public override I<#= entity #>State <#= t.transition #> => new <#= entity #>States.<#= t.state #>();       
+<#
+        }
+#>
+
+            public T_Error() {}
+
+            public void InitError(I<#= entity #>State previousState, Expression<Func<I<#= entity #>State, I<#= entity #>State>> attemptedTransition, Exception exception) 
+            {
+                PreviousState = previousState;
+                AttemptedTransition = attemptedTransition;
+                Exception = exception;
+            }
+            public I<#= entity #>State PreviousState { get; set; }
+            public Expression<Func<I<#= entity #>State, I<#= entity #>State>> AttemptedTransition { get; set; }
+            public Exception Exception { get; set; }
+        }
+
     }
 
     /// <summary>
@@ -181,23 +250,17 @@ using <#= entityNamespace.Substring(9).Trim() #>;
     public partial class <#= entity #>StateEngine : StateEngine<<#= entity #>, I<#= entity #>State>
     {
 
-        protected override List<
-            (
-                Type, 
-                Expression<Func<I<#= entity #>State, I<#= entity #>State>> transition, 
-                Action<<#= entity #>> action,
-                Expression<Func<I<#= entity #>State, I<#= entity #>State>> transitionOnFail
-            )> Transitions
-            => new List<(Type, Expression<Func<I<#= entity #>State, I<#= entity #>State>> transition, Action<<#= entity #>> action,
-                Expression<Func<I<#= entity #>State, I<#= entity #>State>> transitionOnFail)>
+        public override List<Transition<<#= entity #>, I<#= entity #>State>> Transitions 
+            => new List<Transition<<#= entity #>, I<#= entity #>State>>
             {
 <#
         foreach (var t in Transitions)
         {
 #>
-                (typeof(<#= entity #>States.<#= t.from #>), state => state.<#= t.transition #>, <#=
-                    string.IsNullOrWhiteSpace(t.entityAction) ? "null" : t.entityAction #>, <#=
-                    string.IsNullOrWhiteSpace(t.failTransition) ? "null" : $"state => state.{t.failTransition}" #>),
+                new Transition<<#= entity #>, I<#= entity #>State>(new <#= entity #>States.<#= t.from #>(), state => state.<#= t.transitionOnSuccess #>, <#= 
+                        string.IsNullOrWhiteSpace(t.onTransitioning) ? "null" : t.onTransitioning #>, <#= 
+                        string.IsNullOrWhiteSpace(t.transitionOnFailed) ? "null" : $"state => state.{t.transitionOnFailed}" #>,<#= 
+                        string.IsNullOrWhiteSpace(t.onTransitionFailed) ? "null" : t.onTransitionFailed #>),
 <#
         }
 #>
@@ -212,11 +275,20 @@ using <#= entityNamespace.Substring(9).Trim() #>;
         //       class as well in order to satisfy the MethodGroup-Calls in the
         //       transition list above
 <#
-        foreach (var t in Transitions.Where(t => !string.IsNullOrWhiteSpace(t.entityAction)))
+        foreach (var t in Transitions)
         {
+            if (!string.IsNullOrWhiteSpace(t.onTransitioning))
+            {
 #>
-        partial void <#= t.entityAction #>(<#= entity #> <#= entity.ToLower() #>);
+        private partial bool <#= t.onTransitioning#>(<#= entity #> <#= entity.ToLower() #>);
 <#
+            }
+            if (!string.IsNullOrWhiteSpace(t.onTransitionFailed))
+            {
+#>
+        private partial bool <#= t.onTransitionFailed#>(<#= entity #> <#= entity.ToLower() #>);
+<#
+            }
         }
 #>
     }
@@ -263,14 +335,28 @@ using <#= entityNamespace.Substring(9).Trim() #>;
         // NOTE: implement the following partial methods in order to process the entities
         //       in accordance to the corresponding transitions
 <#
-        foreach (var t in Transitions.Where(t => !string.IsNullOrWhiteSpace(t.entityAction)))
+        foreach (var t in Transitions)
         {
+            if (!string.IsNullOrWhiteSpace(t.onTransitioning))
+            {
 #>
-        partial void <#= t.entityAction #>(<#= entity #> <#= entity.ToLower() #>)
+        private partial bool <#= t.onTransitioning#>(<#= entity #> <#= entity.ToLower() #>)
         {
             /* add logic here */
+            return true;
         }
 <#
+            }
+            if (!string.IsNullOrWhiteSpace(t.onTransitionFailed))
+            {
+#>
+        private partial bool <#= t.onTransitionFailed#>(<#= entity #> <#= entity.ToLower() #>)
+        {
+            /* add logic here */
+            return true;
+        }
+<#
+            }
         }
 #>
     }
