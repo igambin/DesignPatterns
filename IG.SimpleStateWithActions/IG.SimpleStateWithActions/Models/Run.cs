@@ -1,5 +1,4 @@
 using IG.SimpleStateWithActions.StateEngines;
-using IG.SimpleStateWithActions.StateEngineShared;
 using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.Models

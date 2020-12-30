@@ -4,7 +4,7 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public abstract class StateEngine<TEntity, TState> : IStateEngine<TEntity, TState>
-        where TEntity : IStatedEntity<TState>, new()
+        where TEntity : class, IStatedEntity<TState>, new()
         where TState : IState<TState>
     {
 

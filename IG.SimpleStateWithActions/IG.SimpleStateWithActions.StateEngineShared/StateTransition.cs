@@ -6,7 +6,7 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public class StateTransition<TEntity, TState> : IStateTransition<TEntity, TState>
-        where TEntity : IStatedEntity<TState>, new()
+        where TEntity : class, IStatedEntity<TState>, new()
         where TState : IState<TState>
     {
         public TEntity StatedEntity { get; set; }

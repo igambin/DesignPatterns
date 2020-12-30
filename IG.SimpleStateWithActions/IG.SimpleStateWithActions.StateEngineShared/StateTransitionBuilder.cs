@@ -1,15 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public class StateTransitionBuilder<TEntity, TState> : StateTransition<TEntity, TState>, IStateTransitionBuilder<TEntity, TState>
-        where TEntity : IStatedEntity<TState>, new()
+        where TEntity : class, IStatedEntity<TState>, new()
         where TState : IState<TState>
     {
         public StateTransitionBuilder(TEntity statedEntity, List<Transition<TEntity, TState>> transitions)

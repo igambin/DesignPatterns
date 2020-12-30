@@ -5,7 +5,7 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public class StateTransitionRunner<TEntity, TState> : StateTransition<TEntity, TState>, IStateTransitionRunner<TEntity, TState>
-        where TEntity : IStatedEntity<TState>, new()
+        where TEntity : class, IStatedEntity<TState>, new()
         where TState : IState<TState>
     {
 
@@ -15,9 +15,21 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             Transitions = validator.Transitions;
             TransitionToInvoke = validator.TransitionToInvoke;
             PreCheck = preCheck;
-        }     
+        }
 
-        public bool IsTransitionAllowed(TState targetState) => PreCheck?.Invoke(StatedEntity) ?? false;
+        public bool IsTransitionAllowed()
+        {
+            try
+            {
+                var preCheckSuccessful = PreCheck?.Invoke(StatedEntity) ?? true;
+                var transitionExists = GetRequestedTransition != null;
+                return transitionExists && preCheckSuccessful;
+            }
+            catch
+            {
+                return false;
+            }
+        } 
 
         public IStateTransitionRunner<TEntity, TState> OnSuccess(Action onSuccess)
         {
@@ -37,6 +49,8 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             return this;
         }
 
+        private Transition<TEntity, TState> GetRequestedTransition => Transitions.FindTransition(StatedEntity, TransitionToInvoke);
+
         public TState Execute()
         {
             var previousState = StatedEntity.State;
@@ -44,7 +58,13 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 
             try
             {
-                var transition = Transitions.FindTransition(StatedEntity, TransitionToInvoke);
+                var transition = GetRequestedTransition;
+
+                if (!(PreCheck?.Invoke(StatedEntity)??true))
+                {
+                    throw new TransitionConstraintFailedException(transition.StateTransitionOnSuccess.TransitionName(),
+                        $"{previousState}");
+                }
 
                 var transitionSuccessful = transition.OnTransitioning?.Invoke(StatedEntity) ?? true;
 

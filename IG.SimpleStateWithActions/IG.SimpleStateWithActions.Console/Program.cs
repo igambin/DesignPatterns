@@ -26,15 +26,17 @@ namespace IG.SimpleStateWithActions.Console
 
             System.Console.WriteLine();
             System.Console.WriteLine(r.Name);
-	}
+	    }
 
-	public static void DoTransition(Run run, Expression<Func<IRunState, IRunState>> transition)
-	{
+	    public static void DoTransition(Run run, Expression<Func<IRunState, IRunState>> transition)
+	    {
+            // basically you'd want to register the dependency 
+            // ...Register<IStateEngine<Run, IRunState>, RunStateEngine>() per RequestLifetime
             var runStateEngine = new RunStateEngine();
             try
             {
                 string tname = $"({ transition.TransitionName()} from { run.State.GetType().Name})";
-                var t = runStateEngine.For(run)
+                _ = runStateEngine.For(run)
                     .InvokeTransition(transition)
                     .WithoutPreValidation()
                     .OnSuccess(() =>
@@ -57,6 +59,5 @@ namespace IG.SimpleStateWithActions.Console
             }
             System.Console.WriteLine($"\nState: {run.State}");
         }
-
     }
 }

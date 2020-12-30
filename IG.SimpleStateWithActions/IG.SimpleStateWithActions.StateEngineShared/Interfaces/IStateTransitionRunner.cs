@@ -6,7 +6,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared.Interfaces
         where TEntity : IStatedEntity<TState>, new()
         where TState : IState<TState>
     {
-        bool IsTransitionAllowed(TState targetState);
+        bool IsTransitionAllowed();
         IStateTransitionRunner<TEntity, TState> OnError(Action<Exception> onError);
         IStateTransitionRunner<TEntity, TState> OnSuccess(Action onSuccess);
         IStateTransitionRunner<TEntity, TState> OnFailed(Action onFailed);
