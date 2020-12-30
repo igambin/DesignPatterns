@@ -42,7 +42,7 @@ namespace IG.SimpleStateWithActions.StateEngines
         private partial bool StartCleanup(Run run)
         {
             /* add logic here */
-            return false;
+            return true;
         }
         private partial bool FinalizeRun(Run run)
         {
