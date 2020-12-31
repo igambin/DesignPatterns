@@ -9,21 +9,21 @@ namespace IG.SimpleStateWithActions.StateEngineShared
         where TState : IState<TState>
     {
 
-        public StateTransitionRunner(IStateTransitionValidator<TEntity, TState> validator, Func<TEntity, bool> preCheck = null)
+        public StateTransitionRunner(IStateTransitionValidator<TEntity, TState> validator, Func<TEntity, bool> preCondition = null)
         {
             StatedEntity = validator.StatedEntity;
             Transitions = validator.Transitions;
             TransitionToInvoke = validator.TransitionToInvoke;
-            PreCheck = preCheck;
+            PreCondition = preCondition;
         }
 
         public bool IsTransitionAllowed()
         {
             try
             {
-                var preCheckSuccessful = PreCheck?.Invoke(StatedEntity) ?? true;
+                var preConditionSuccessful = PreCondition?.Invoke(StatedEntity) ?? true;
                 var transitionExists = GetRequestedTransition != null;
-                return transitionExists && preCheckSuccessful;
+                return transitionExists && preConditionSuccessful;
             }
             catch
             {
@@ -60,7 +60,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             {
                 var transition = GetRequestedTransition;
 
-                if (!(PreCheck?.Invoke(StatedEntity)??true))
+                if (!(PreCondition?.Invoke(StatedEntity)??true))
                 {
                     throw new TransitionConstraintFailedException(transition.StateTransitionOnSuccess.TransitionName(),
                         $"{previousState}");

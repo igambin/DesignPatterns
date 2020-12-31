@@ -18,7 +18,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
         public IStateTransitionRunner<TEntity, TState> WithoutPreValidation()
             => new StateTransitionRunner<TEntity, TState>(this, x => true);
 
-        public IStateTransitionRunner<TEntity, TState> WithPreValidation(Func<TEntity, bool> preCheck)
-            => new StateTransitionRunner<TEntity, TState>(this, preCheck);
+        public IStateTransitionRunner<TEntity, TState> WithPreValidation(Func<TEntity, bool> preCondition)
+            => new StateTransitionRunner<TEntity, TState>(this, preCondition);
     }
 }
