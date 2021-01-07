@@ -6,11 +6,11 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public class StateTransitionBuilder<TEntity, TState> : StateTransition<TEntity, TState>, IStateTransitionBuilder<TEntity, TState>
+    public class StateTransitionBuilder<TEntity, TState, TStateEnum> : StateTransition<TEntity, TState, TStateEnum>, IStateTransitionBuilder<TEntity, TState, TStateEnum>
         where TEntity : class, IStatedEntity<TState>, new()
-        where TState : IState<TState>
+        where TState : IState<TState, TStateEnum>
     {
-        public StateTransitionBuilder(TEntity statedEntity, List<Transition<TEntity, TState>> transitions)
+        public StateTransitionBuilder(TEntity statedEntity, List<Transition<TEntity, TState, TStateEnum>> transitions)
         {
             if (statedEntity == null) throw new ArgumentNullException(nameof(statedEntity));
             if (transitions == null) throw new ArgumentNullException(nameof(transitions));
@@ -19,10 +19,10 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             Transitions = transitions.ToList();
         }
 
-        public IStateTransitionValidator<TEntity, TState> InvokeTransition(Expression<Func<TState, TState>> transition)
+        public IStateTransitionValidator<TEntity, TState, TStateEnum> InvokeTransition(Expression<Func<TState, TState>> transition)
         {
             if (transition == null) throw new ArgumentNullException(nameof(transition));
-            return new StateTransitionValidator<TEntity, TState>(this, transition);
+            return new StateTransitionValidator<TEntity, TState, TStateEnum>(this, transition);
         }
     }
 }

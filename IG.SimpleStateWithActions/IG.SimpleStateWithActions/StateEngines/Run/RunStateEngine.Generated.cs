@@ -14,12 +14,13 @@ using IG.SimpleStateWithActions.StateEngineShared;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
-using IG.SimpleStateWithActions.Models;
 using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
+
+using IG.SimpleStateWithActions.Models;
 
 namespace IG.SimpleStateWithActions.StateEngines
 {
-    public interface IRunState : IState<IRunState>
+    public interface IRunState : IState<IRunState, RunStatesEnum>
     {
         IRunState Start { get; }
         IRunState Finalize { get; }
@@ -28,7 +29,7 @@ namespace IG.SimpleStateWithActions.StateEngines
         IRunState Reset { get; }
     }
 
-    public abstract class RunState : State<IRunState>, IRunState
+    public abstract class RunState : State<IRunState, RunStatesEnum>, IRunState
     {
         public virtual IRunState Start => UndefinedTransition(nameof(Start));
         public virtual IRunState Finalize => UndefinedTransition(nameof(Finalize));
@@ -44,36 +45,46 @@ namespace IG.SimpleStateWithActions.StateEngines
                 };
     }
 
+    public enum RunStatesEnum 
+    {
+        Initial, InProgress, Done, Cancelled, Failed, T_Error
+    }
+
     public class RunStates
     {
-        public class Initial : RunState, IState<IRunState>
+        public class Initial : RunState, IState<IRunState, RunStatesEnum>
         {
+            public override RunStatesEnum EnumState => RunStatesEnum.Initial;
             public override IRunState Start => new RunStates.InProgress();       
         }
 
-        public class InProgress : RunState, IState<IRunState>
+        public class InProgress : RunState, IState<IRunState, RunStatesEnum>
         {
+            public override RunStatesEnum EnumState => RunStatesEnum.InProgress;
             public override IRunState Finalize => new RunStates.Done();       
             public override IRunState Cancel => new RunStates.Cancelled();       
             public override IRunState Fail => new RunStates.Failed();       
         }
 
-        public class Done : RunState, IState<IRunState>
+        public class Done : RunState, IState<IRunState, RunStatesEnum>
         {
+            public override RunStatesEnum EnumState => RunStatesEnum.Done;
             public override IRunState Reset => new RunStates.Initial();       
         }
 
-        public class Cancelled : RunState, IState<IRunState>
+        public class Cancelled : RunState, IState<IRunState, RunStatesEnum>
         {
+            public override RunStatesEnum EnumState => RunStatesEnum.Cancelled;
             public override IRunState Reset => new RunStates.Initial();       
         }
 
-        public class Failed : RunState, IState<IRunState>
+        public class Failed : RunState, IState<IRunState, RunStatesEnum>
         {
+            public override RunStatesEnum EnumState => RunStatesEnum.Failed;
             public override IRunState Reset => new RunStates.Initial();       
         }
 
-        public class T_Error : RunState, ITechnicalErrorState<IRunState>, IState<IRunState>
+        public class T_Error : RunState, ITechnicalErrorState<IRunState>, IState<IRunState, RunStatesEnum>
         {
 
             public override IRunState Reset => new RunStates.Initial();       
@@ -89,6 +100,8 @@ namespace IG.SimpleStateWithActions.StateEngines
             public IRunState PreviousState { get; set; }
             public Expression<Func<IRunState, IRunState>> AttemptedTransition { get; set; }
             public Exception Exception { get; set; }
+            public override RunStatesEnum EnumState => RunStatesEnum.T_Error;
+
         }
 
     }
@@ -98,20 +111,20 @@ namespace IG.SimpleStateWithActions.StateEngines
     /// 	state transitions. This allows modifications and interactions in
     /// 	and of the stated object when the state is about to change.
     /// </summary>
-    public partial class RunStateEngine : StateEngine<Run, IRunState>
+    public partial class RunStateEngine : StateEngine<Run, IRunState, RunStatesEnum>
     {
 
-        public override List<Transition<Run, IRunState>> Transitions 
-            => new List<Transition<Run, IRunState>>
+        public override List<Transition<Run, IRunState, RunStatesEnum>> Transitions 
+            => new List<Transition<Run, IRunState, RunStatesEnum>>
             {
-                new Transition<Run, IRunState>(new RunStates.Initial(), state => state.Start, StartRun, null,null),
-                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Finalize, FinalizeRun, state => state.Fail,null),
-                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Cancel, null, null,null),
-                new Transition<Run, IRunState>(new RunStates.InProgress(), state => state.Fail, null, null,null),
-                new Transition<Run, IRunState>(new RunStates.Done(), state => state.Reset, null, null,null),
-                new Transition<Run, IRunState>(new RunStates.Cancelled(), state => state.Reset, null, null,null),
-                new Transition<Run, IRunState>(new RunStates.Failed(), state => state.Reset, null, null,null),
-                new Transition<Run, IRunState>(new RunStates.T_Error(), state => state.Reset, StartCleanup, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.Initial(), state => state.Start, StartRun, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.InProgress(), state => state.Finalize, FinalizeRun, state => state.Fail,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.InProgress(), state => state.Cancel, null, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.InProgress(), state => state.Fail, null, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.Done(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.Cancelled(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.Failed(), state => state.Reset, null, null,null),
+                new Transition<Run, IRunState, RunStatesEnum>(new RunStates.T_Error(), state => state.Reset, StartCleanup, null,null),
             };
 
         // NOTE: if a constructor receiving specific dependencies is required, 

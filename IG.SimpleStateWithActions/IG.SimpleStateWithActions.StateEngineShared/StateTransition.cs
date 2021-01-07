@@ -5,12 +5,12 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public class StateTransition<TEntity, TState> : IStateTransition<TEntity, TState>
+    public class StateTransition<TEntity, TState, TStateEnum> : IStateTransition<TEntity, TState, TStateEnum>
         where TEntity : class, IStatedEntity<TState>, new()
-        where TState : IState<TState>
+        where TState : IState<TState, TStateEnum>
     {
         public TEntity StatedEntity { get; set; }
-        public List<Transition<TEntity, TState>> Transitions { get; set; }
+        public List<Transition<TEntity, TState, TStateEnum>> Transitions { get; set; }
         public Expression<Func<TState, TState>> TransitionToInvoke { get; set; }
         public Func<TEntity, bool> PreCondition { get; set; }
         public Action<Exception> ActionOnError { get; set; }

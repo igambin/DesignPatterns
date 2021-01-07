@@ -8,27 +8,27 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 {
     public static class StateEngineExtensions
     {
-        public static string TransitionName<TState>(this Expression<Func<TState, TState>> transition)
-            where TState : IState<TState>
+        public static string TransitionName<TState, TStateEnum>(this Expression<Func<TState, TState>> transition)
+            where TState : IState<TState, TStateEnum>
         {
             var transitionMember = transition.Body as MemberExpression;
             return transitionMember.Member.Name;
         }
 
-        public static string ActualStateName<TEntity, TState>(this TEntity entity)
+        public static string ActualStateName<TEntity, TState, TStateEnum>(this TEntity entity)
             where TEntity : IStatedEntity<TState>, new()
-            where TState : IState<TState> 
+            where TState : IState<TState, TStateEnum> 
             => $"{entity.State}";
 
-        public static Transition<TEntity, TState> FindTransition<TEntity, TState>(
-            this List<Transition<TEntity, TState>> transitions, 
+        public static Transition<TEntity, TState, TStateEnum> FindTransition<TEntity, TState, TStateEnum>(
+            this List<Transition<TEntity, TState, TStateEnum>> transitions, 
             TEntity entity, 
             Expression<Func<TState, TState>> transition
         )
             where TEntity : IStatedEntity<TState>, new()
-            where TState : IState<TState>
+            where TState : IState<TState, TStateEnum>
         {
-            Transition<TEntity, TState> requestedTransition = default;
+            Transition<TEntity, TState, TStateEnum> requestedTransition = default;
             MemberExpression needleMember = null;
             try 
             {

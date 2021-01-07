@@ -35,7 +35,7 @@ namespace IG.SimpleStateWithActions.Console
             var runStateEngine = new RunStateEngine();
             try
             {
-                string tname = $"({ transition.TransitionName()} from { run.State.GetType().Name})";
+                string tname = $"({ transition.TransitionName<IRunState, RunStatesEnum>()} from { run.State.GetType().Name})";
                 _ = runStateEngine.For(run)
                     .InvokeTransition(transition)
                     .WithoutPreValidation()

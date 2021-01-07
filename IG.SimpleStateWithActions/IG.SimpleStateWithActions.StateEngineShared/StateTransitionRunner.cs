@@ -4,12 +4,12 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public class StateTransitionRunner<TEntity, TState> : StateTransition<TEntity, TState>, IStateTransitionRunner<TEntity, TState>
+    public class StateTransitionRunner<TEntity, TState, TStateEnum> : StateTransition<TEntity, TState, TStateEnum>, IStateTransitionRunner<TEntity, TState, TStateEnum>
         where TEntity : class, IStatedEntity<TState>, new()
-        where TState : IState<TState>
+        where TState : IState<TState, TStateEnum>
     {
 
-        public StateTransitionRunner(IStateTransitionValidator<TEntity, TState> validator, Func<TEntity, bool> preCondition = null)
+        public StateTransitionRunner(IStateTransitionValidator<TEntity, TState, TStateEnum> validator, Func<TEntity, bool> preCondition = null)
         {
             StatedEntity = validator.StatedEntity;
             Transitions = validator.Transitions;
@@ -31,25 +31,25 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             }
         } 
 
-        public IStateTransitionRunner<TEntity, TState> OnSuccess(Action onSuccess)
+        public IStateTransitionRunner<TEntity, TState, TStateEnum> OnSuccess(Action onSuccess)
         {
             ActionOnSuccess = onSuccess;
             return this;
         }
 
-        public IStateTransitionRunner<TEntity, TState> OnFailed(Action onFailed)
+        public IStateTransitionRunner<TEntity, TState, TStateEnum> OnFailed(Action onFailed)
         {
             ActionOnFailed = onFailed;
             return this;
         }
 
-        public IStateTransitionRunner<TEntity, TState> OnError(Action<Exception> onError)
+        public IStateTransitionRunner<TEntity, TState, TStateEnum> OnError(Action<Exception> onError)
         {
             ActionOnError = onError;
             return this;
         }
 
-        private Transition<TEntity, TState> GetRequestedTransition => Transitions.FindTransition(StatedEntity, TransitionToInvoke);
+        private Transition<TEntity, TState, TStateEnum> GetRequestedTransition => Transitions.FindTransition(StatedEntity, TransitionToInvoke);
 
         public TState Execute()
         {
@@ -62,7 +62,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 
                 if (!(PreCondition?.Invoke(StatedEntity)??true))
                 {
-                    throw new TransitionConstraintFailedException(transition.StateTransitionOnSuccess.TransitionName(),
+                    throw new TransitionConstraintFailedException(transition.StateTransitionOnSuccess.TransitionName<TState, TStateEnum>(),
                         $"{previousState}");
                 }
 
@@ -77,7 +77,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 
                 if (transition.OnTransitionFailed == null)
                 {
-                    throw new TransitionFailedException(transition.StateTransitionOnSuccess.TransitionName(),
+                    throw new TransitionFailedException(transition.StateTransitionOnSuccess.TransitionName<TState, TStateEnum>(),
                         $"{previousState}");
                 }
 
@@ -89,7 +89,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
                     return StatedEntity.State;
                 }
                 throw new TransitionRollbackFailedException(
-                    transition.StateTransitionOnFailed?.TransitionName() ?? "[rollback undefined]", $"{previousState}");
+                    transition.StateTransitionOnFailed?.TransitionName<TState, TStateEnum>() ?? "[rollback undefined]", $"{previousState}");
             }
             catch (Exception ex)
             {

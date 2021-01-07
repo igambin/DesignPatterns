@@ -4,9 +4,9 @@ using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
 {
-    public class Transition<TEntity, TState>
+    public class Transition<TEntity, TState, TStateEnum>
         where TEntity : IStatedEntity<TState>, new()
-        where TState : IState<TState>
+        where TState : IState<TState, TStateEnum>
     {
         public Transition(
               TState fromState
@@ -23,7 +23,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             OnTransitionFailed = onTransitionFailed;
         }
 
-        public string Name => $"{From.GetType().Name}.{StateTransitionOnSuccess.TransitionName()}";
+        public string Name => $"{From.GetType().Name}.{StateTransitionOnSuccess.TransitionName<TState, TStateEnum>()}";
         public TState From { get; }
         public Expression<Func<TState, TState>> StateTransitionOnSuccess { get; }
         public Func<TEntity, bool> OnTransitioning { get; }

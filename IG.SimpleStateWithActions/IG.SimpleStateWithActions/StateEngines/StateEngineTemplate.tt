@@ -121,6 +121,8 @@ using IG.SimpleStateWithActions.StateEngineShared;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
+using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
+
 using <#= entityNamespace.Substring(9).Trim() #>;
 
 <#= seNamespace #>
@@ -137,7 +139,7 @@ using <#= entityNamespace.Substring(9).Trim() #>;
                 .ToList();
 
 #>
-    public interface I<#= entity #>State : IState<I<#= entity #>State>
+    public interface I<#= entity #>State : IState<I<#= entity #>State, <#= entity #>StatesEnum>
     {
 <#
         foreach (var t in transitionNames)
@@ -149,7 +151,7 @@ using <#= entityNamespace.Substring(9).Trim() #>;
 #>
     }
 
-    public abstract class <#= entity #>State : State<I<#= entity #>State>, I<#= entity #>State
+    public abstract class <#= entity #>State : State<I<#= entity #>State, <#= entity #>StatesEnum>, I<#= entity #>State
     {
 <#
         foreach (var t in transitionNames)
@@ -168,14 +170,20 @@ using <#= entityNamespace.Substring(9).Trim() #>;
                 };
     }
 
+    public enum <#= entity #>StatesEnum 
+    {
+        <#= string.Join(", ", states) #>
+    }
+
     public class <#= entity #>States
     {
 <#
         foreach (var s in states.Where(state => !state.Equals("T_Error")))
         {
 #>
-        public class <#= s #> : <#= entity #>State, IState<I<#= entity #>State>
+        public class <#= s #> : <#= entity #>State, IState<I<#= entity #>State, <#= entity #>StatesEnum>
         {
+            public override <#= entity#>StatesEnum EnumState => <#= entity#>StatesEnum.<#= s#>;
 <#
             var stateTransitions = Transitions.Where(t => t.from == s).ToList();
             var generateTransitions =
@@ -202,7 +210,7 @@ using <#= entityNamespace.Substring(9).Trim() #>;
 <#
         }
 #>
-        public class T_Error : <#= entity #>State, ITechnicalErrorState<I<#= entity #>State>, IState<I<#= entity #>State>
+        public class T_Error : <#= entity #>State, ITechnicalErrorState<I<#= entity #>State>, IState<I<#= entity #>State, <#= entity #>StatesEnum>
         {
 
 <#
@@ -238,6 +246,8 @@ using <#= entityNamespace.Substring(9).Trim() #>;
             public I<#= entity #>State PreviousState { get; set; }
             public Expression<Func<I<#= entity #>State, I<#= entity #>State>> AttemptedTransition { get; set; }
             public Exception Exception { get; set; }
+            public override <#= entity#>StatesEnum EnumState => <#= entity#>StatesEnum.T_Error;
+
         }
 
     }
@@ -247,17 +257,17 @@ using <#= entityNamespace.Substring(9).Trim() #>;
     /// 	state transitions. This allows modifications and interactions in
     /// 	and of the stated object when the state is about to change.
     /// </summary>
-    public partial class <#= entity #>StateEngine : StateEngine<<#= entity #>, I<#= entity #>State>
+    public partial class <#= entity #>StateEngine : StateEngine<<#= entity #>, I<#= entity #>State, <#= entity#>StatesEnum>
     {
 
-        public override List<Transition<<#= entity #>, I<#= entity #>State>> Transitions 
-            => new List<Transition<<#= entity #>, I<#= entity #>State>>
+        public override List<Transition<<#= entity #>, I<#= entity #>State, <#= entity#>StatesEnum>> Transitions 
+            => new List<Transition<<#= entity #>, I<#= entity #>State, <#= entity#>StatesEnum>>
             {
 <#
         foreach (var t in Transitions)
         {
 #>
-                new Transition<<#= entity #>, I<#= entity #>State>(new <#= entity #>States.<#= t.from #>(), state => state.<#= t.transitionOnSuccess #>, <#= 
+                new Transition<<#= entity #>, I<#= entity #>State, <#= entity#>StatesEnum>(new <#= entity #>States.<#= t.from #>(), state => state.<#= t.transitionOnSuccess #>, <#= 
                         string.IsNullOrWhiteSpace(t.onTransitioning) ? "null" : t.onTransitioning #>, <#= 
                         string.IsNullOrWhiteSpace(t.transitionOnFailed) ? "null" : $"state => state.{t.transitionOnFailed}" #>,<#= 
                         string.IsNullOrWhiteSpace(t.onTransitionFailed) ? "null" : t.onTransitionFailed #>),
@@ -315,6 +325,7 @@ using IG.SimpleStateWithActions.StateEngineShared;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
+using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 using <#= entityNamespace.Substring(9).Trim() #>;
 
 <#= seNamespace #>
