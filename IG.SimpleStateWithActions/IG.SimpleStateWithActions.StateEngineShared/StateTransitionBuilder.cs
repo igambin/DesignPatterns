@@ -12,10 +12,9 @@ namespace IG.SimpleStateWithActions.StateEngineShared
     {
         public StateTransitionBuilder(TEntity statedEntity, List<Transition<TEntity, TState, TStateEnum>> transitions)
         {
-            if (statedEntity == null) throw new ArgumentNullException(nameof(statedEntity));
             if (transitions == null) throw new ArgumentNullException(nameof(transitions));
-            if (!transitions.Any()) throw new ArgumentException("List may not be empty", nameof(transitions));
-            StatedEntity = statedEntity;
+            if (!transitions.Any()) throw new ArgumentException(@"List may not be empty", nameof(transitions));
+            StatedEntity = statedEntity ?? throw new ArgumentNullException(nameof(statedEntity));
             Transitions = transitions.ToList();
         }
 

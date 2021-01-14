@@ -12,9 +12,9 @@ namespace IG.SimpleStateWithActions.StateEngineShared.Interfaces
         List<Transition<TEntity, TState, TStateEnum>> Transitions { get; }
         Expression<Func<TState, TState>> TransitionToInvoke { get; }
         Func<TEntity, bool> PreCondition { get; }
-        Action<Exception> ActionOnError { get; }
-        Action ActionOnSuccess { get; }
-        Action ActionOnFailed { get; }
+        public Action<TEntity, IState<TState, TStateEnum>> ActionOnError { get; set; }
+        public Action<TEntity, IState<TState, TStateEnum>> ActionOnSuccess { get; set; }
+        public Action<TEntity, IState<TState, TStateEnum>> ActionOnFailed { get; set; }
 
     }
 }

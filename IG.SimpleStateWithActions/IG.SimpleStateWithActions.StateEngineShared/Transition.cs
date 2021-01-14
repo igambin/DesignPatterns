@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using IG.SimpleStateWithActions.StateEngineShared.Interfaces;
 
 namespace IG.SimpleStateWithActions.StateEngineShared
@@ -11,9 +12,9 @@ namespace IG.SimpleStateWithActions.StateEngineShared
         public Transition(
               TState fromState
             , Expression<Func<TState, TState>> stateTransitionOnSuccess
-            , Func<TEntity, bool> onTransitioning
+            , Func<TEntity, Task<bool>> onTransitioning
             , Expression<Func<TState, TState>> stateTransitionOnFailed
-            , Func<TEntity, bool> onTransitionFailed
+            , Func<TEntity, Task<bool>> onTransitionFailed
             )
         {
             From = fromState;
@@ -26,9 +27,9 @@ namespace IG.SimpleStateWithActions.StateEngineShared
         public string Name => $"{From.GetType().Name}.{StateTransitionOnSuccess.TransitionName<TState, TStateEnum>()}";
         public TState From { get; }
         public Expression<Func<TState, TState>> StateTransitionOnSuccess { get; }
-        public Func<TEntity, bool> OnTransitioning { get; }
+        public Func<TEntity, Task<bool>> OnTransitioning { get; }
         public Expression<Func<TState, TState>> StateTransitionOnFailed { get; }
-        public Func<TEntity, bool> OnTransitionFailed { get; }
+        public Func<TEntity, Task<bool>> OnTransitionFailed { get; }
     }
 
 }

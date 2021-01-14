@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="StateEngines\StateEngineTemplate.tt">
+    <None Update="StateEngine\StateEngineTemplate.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>StateEngineTemplate.cs</LastGenOutput>
     </None>
@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="StateEngines\StateEngineTemplate.cs">
+    <Compile Update="StateEngine\StateEngineTemplate.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>StateEngineTemplate.tt</DependentUpon>

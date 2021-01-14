@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using IG.SimpleStateWithActions.Models;
-using IG.SimpleStateWithActions.StateEngines;
+using IG.SimpleStateWithActions.StateEngine;
 using IG.SimpleStateWithActions.StateEngineShared;
 using IG.SimpleStateWithActions.StateEngineShared.Exceptions;
 
@@ -18,11 +18,11 @@ namespace IG.SimpleStateWithActions.Console
             };
             System.Console.WriteLine($"State: {r.State}");
 
-            DoTransition(r, state => state.Finalize);
-            DoTransition(r, state => state.Reset);
-            DoTransition(r, state => state.Start);
-            DoTransition(r, state => state.Finalize);
-            DoTransition(r, state => state.Reset);
+            DoTransition(r, state => state.Finalize());
+            DoTransition(r, state => state.Reset());
+            DoTransition(r, state => state.Start());
+            DoTransition(r, state => state.Finalize());
+            DoTransition(r, state => state.Reset());
 
             System.Console.WriteLine();
             System.Console.WriteLine(r.Name);
@@ -39,17 +39,17 @@ namespace IG.SimpleStateWithActions.Console
                 _ = runStateEngine.For(run)
                     .InvokeTransition(transition)
                     .WithoutPreValidation()
-                    .OnSuccess(() =>
+                    .OnSuccess((entity, state) =>
                     {
                         System.Console.WriteLine($"Success {tname}!");
                     })
-                    .OnFailed(() =>
+                    .OnFailed((entity, state) =>
                     {
                         System.Console.WriteLine($"Failed {tname}!");
                     })
-                    .OnError((ex) =>
+                    .OnError((entity, errorstate) =>
                     {
-                        System.Console.WriteLine($"ERROR {tname}: {ex.Message}");
+                        System.Console.WriteLine($"ERROR {tname}: {errorstate.Exception.Message}");
                     })
                     .Execute();
             }

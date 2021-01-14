@@ -10,8 +10,8 @@ namespace IG.SimpleStateWithActions.StateEngineShared
     {
         public StateTransitionValidator(StateTransitionBuilder<TEntity,TState, TStateEnum> builder, Expression<Func<TState, TState>> transitionToInvoke)
         {
-            StatedEntity = builder.StatedEntity;
-            Transitions = builder.Transitions;
+            StatedEntity = builder?.StatedEntity;
+            Transitions = builder?.Transitions;
             TransitionToInvoke = transitionToInvoke;
         }
 

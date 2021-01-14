@@ -11,8 +11,8 @@ namespace IG.SimpleStateWithActions.StateEngineShared
         public static string TransitionName<TState, TStateEnum>(this Expression<Func<TState, TState>> transition)
             where TState : IState<TState, TStateEnum>
         {
-            var transitionMember = transition.Body as MemberExpression;
-            return transitionMember.Member.Name;
+            var transitionMember = transition?.Body as MemberExpression;
+            return transitionMember?.Member.Name ?? "[undefined member]";
         }
 
         public static string ActualStateName<TEntity, TState, TStateEnum>(this TEntity entity)
@@ -29,22 +29,22 @@ namespace IG.SimpleStateWithActions.StateEngineShared
             where TState : IState<TState, TStateEnum>
         {
             Transition<TEntity, TState, TStateEnum> requestedTransition = default;
-            MemberExpression needleMember = null;
+            MethodCallExpression needleMember = null;
             try 
             {
                 var needleType = entity.State.GetType();
-                needleMember = transition.Body as MemberExpression;
+                needleMember = transition?.Body as MethodCallExpression;
                 if (needleMember == null)
                 {
                     throw new TransitionFailedException($"Transition '{transition?.Body.ToString() ?? "[null]"}' failed on {typeof(TEntity)}");
                 }
 
-                transitions.ForEach(t =>
+                transitions?.ForEach(t =>
                 {
-                    var transitionMember = t.StateTransitionOnSuccess.Body as MemberExpression;
+                    var transitionMember = t.StateTransitionOnSuccess.Body as MethodCallExpression;
                     if (needleType == t.From.GetType()
-                        && needleMember.Member.Name == transitionMember.Member.Name
-                        && needleMember.Member.ReflectedType == transitionMember.Member.ReflectedType)
+                        && needleMember.Method.Name == (transitionMember?.Method.Name ?? "[undefined member]")
+                        && needleMember.Method.ReflectedType == transitionMember?.Method.ReflectedType)
                     {
                         requestedTransition = t;
                     }
@@ -57,7 +57,7 @@ namespace IG.SimpleStateWithActions.StateEngineShared
 
             if (requestedTransition == default)
             {
-                throw new UndefinedTransitionException(needleMember.Member.Name, entity.State.GetType().Name);
+                throw new UndefinedTransitionException(needleMember.Method.Name, entity.State.GetType().Name);
             }
 
             return requestedTransition;
